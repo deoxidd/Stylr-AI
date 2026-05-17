@@ -3,41 +3,13 @@ import csv
 import time
 
 STORES = [
-    {
-        "name": "Miansai",
-        "url": "https://www.miansai.com/products.json",
-        "default_undertone": "warm"
-    },
-    {
-        "name": "Taylor Stitch",
-        "url": "https://www.taylorstitch.com/products.json",
-        "default_undertone": "warm"
-    },
-    {
-        "name": "Outerknown",
-        "url": "https://www.outerknown.com/products.json",
-        "default_undertone": "neutral"
-    },
-    {
-        "name": "Saturdays NYC",
-        "url": "https://www.saturdaysnyc.com/products.json",
-        "default_undertone": "neutral"
-    },
-    {
-        "name": "Aime Leon Dore",
-        "url": "https://www.aimeleondore.com/products.json",
-        "default_undertone": "neutral"
-    },
-    {
-        "name": "Stussy",
-        "url": "https://www.stussy.com/products.json",
-        "default_undertone": "neutral"
-    },
-    {
-        "name": "Ten Thousand",
-        "url": "https://www.tenthousand.cc/products.json",
-        "default_undertone": "neutral"
-    }
+    {"name": "Miansai", "url": "https://www.miansai.com/products.json", "default_undertone": "warm"},
+    {"name": "Taylor Stitch", "url": "https://www.taylorstitch.com/products.json", "default_undertone": "warm"},
+    {"name": "Outerknown", "url": "https://www.outerknown.com/products.json", "default_undertone": "neutral"},
+    {"name": "Saturdays NYC", "url": "https://www.saturdaysnyc.com/products.json", "default_undertone": "neutral"},
+    {"name": "Aime Leon Dore", "url": "https://www.aimeleondore.com/products.json", "default_undertone": "neutral"},
+    {"name": "Stussy", "url": "https://www.stussy.com/products.json", "default_undertone": "neutral"},
+    {"name": "Ten Thousand", "url": "https://www.tenthousand.cc/products.json", "default_undertone": "neutral"}
 ]
 
 PRODUCTS_PER_STORE = 80
@@ -85,10 +57,71 @@ def infer_tags(product_name, product_type, product_description):
     return ",".join(tags)
 
 
+def detect_material(product_name, product_type, product_description):
+    """Detect material from product info. Returns comma-separated materials."""
+    text = f"{product_name} {product_type} {product_description}".lower()
+    materials = []
+    
+    if any(w in text for w in ["cotton", "twill cotton", "100% cotton"]):
+        materials.append("cotton")
+    if any(w in text for w in ["linen", "hemp", "ramie"]):
+        materials.append("linen")
+    if any(w in text for w in ["wool", "merino", "cashmere", "alpaca", "knit"]):
+        materials.append("wool")
+    if any(w in text for w in ["denim", "selvedge", "indigo", "jean"]):
+        materials.append("denim")
+    if any(w in text for w in ["leather", "suede"]):
+        materials.append("leather")
+    if any(w in text for w in ["nylon", "polyester", "gore-tex", "performance", "technical", "stretch"]):
+        materials.append("technical")
+    if any(w in text for w in ["silk", "satin"]):
+        materials.append("silk")
+    
+    return ",".join(materials) if materials else ""
+
+
+def detect_pattern(product_name, product_type, product_description):
+    """Detect pattern from product info."""
+    text = f"{product_name} {product_type} {product_description}".lower()
+    
+    if any(w in text for w in ["stripe", "striped", "pin stripe"]):
+        return "stripes"
+    if any(w in text for w in ["plaid", "check", "checked", "tartan", "gingham"]):
+        return "plaid"
+    if any(w in text for w in ["graphic", "print", "logo tee", "graphic tee"]):
+        return "graphic"
+    if any(w in text for w in ["floral", "flower"]):
+        return "floral"
+    if any(w in text for w in ["geometric", "abstract", "argyle"]):
+        return "geometric"
+    if any(w in text for w in ["camo", "camouflage"]):
+        return "camo"
+    
+    return "solid"
+
+
+def detect_color_category(color_family):
+    """Map color_family to broader color categories for filtering."""
+    earth_tones = ["brown", "orange", "yellow", "green"]
+    neutrals = ["neutral", "gray", "warm-white"]
+    cool_brights = ["blue", "pink"]
+    jewel = ["red", "blue", "green"]  # Note: this overlaps with earth but jewel = saturated versions
+    
+    categories = []
+    
+    if color_family in earth_tones:
+        categories.append("earth-tones")
+    if color_family in neutrals:
+        categories.append("neutrals")
+    if color_family in ["blue", "pink"] and color_family != "neutral":
+        categories.append("cool-tones")
+    
+    return ",".join(categories) if categories else "neutrals"
+
+
 def detect_gender(product_name, product_type, vendor=""):
     text = f"{product_name} {product_type} {vendor}".lower()
     
-    # Strong women's overrides (most specific)
     womens_overrides = [
         "women", "women's", "womens", "ladies",
         "skirt", "dress", "blouse", "bra", "leggings",
@@ -103,7 +136,6 @@ def detect_gender(product_name, product_type, vendor=""):
         if kw in text:
             return "womens"
     
-    # Strong men's overrides
     mens_overrides = [
         "men's", "mens",
         "boxer", "boxer brief", "boxers",
@@ -116,7 +148,6 @@ def detect_gender(product_name, product_type, vendor=""):
         if kw in text:
             return "mens"
     
-    # Brand-level defaults
     brand_defaults = {
         "taylor stitch": "mens",
         "outerknown": "mens",
@@ -169,7 +200,6 @@ COLOR_MAP = {
 
 
 def detect_jewelry_metal(product_name, variant_title=""):
-    """Detect metal type for jewelry, returns (color, family, undertone) or None."""
     text = f"{product_name} {variant_title}".lower()
     
     if any(w in text for w in ["gold", "yellow gold", "rose gold", "brass", "bronze", "copper", "vermeil"]):
@@ -198,49 +228,30 @@ def detect_color(product_name, variant_title=""):
 def detect_category(product_type, product_name):
     text = f"{product_type} {product_name}".lower()
     
-    # Hats first (more specific than tops)
     if any(w in text for w in ["hat", "cap", "beanie", "bucket", "5-panel", "trucker hat", "snapback"]):
         return "hats"
-    
-    # Eyewear
     if any(w in text for w in ["sunglasses", "eyewear", "shades", "glasses", "frames"]):
         return "eyewear"
-    
-    # Jewelry
     if any(w in text for w in ["bracelet", "necklace", "ring ", "rings", "chain", "pendant", 
                                 "earring", "earrings", "stud", "hoop", "choker", "anklet",
                                 "cuff", "signet", "charm", "brooch"]):
         return "jewelry"
-    
-    # Watches (smarter detection to avoid "blackwatch" tartan + "watch" pullover)
     if any(w in text for w in ["wristwatch", "timepiece"]):
         return "watches"
     if "watch" in text and not any(w in text for w in ["watch pullover", "watch jacket", "watch shirt", "blackwatch", "watch knit"]):
         return "watches"
-    
-    # Bags
     if any(w in text for w in ["bag", "tote", "backpack", "crossbody", "duffle", "duffel", "pouch", "fanny", "messenger"]):
         return "bags"
-    
-    # Belts
     if any(w in text for w in ["belt", "buckle"]):
         return "belts"
-    
-    # Tops
     if any(w in text for w in ["tee", "t-shirt", "shirt", "henley", "polo", "sweater", "sweatshirt", "hoodie", "knit", "turtleneck"]):
         if any(w in text for w in ["jacket", "coat", "overshirt", "blazer"]):
             return "outerwear"
         return "tops"
-    
-    # Bottoms
     if any(w in text for w in ["pant", "jean", "trouser", "chino", "short", "joggers", "cargo"]):
         return "bottoms"
-    
-    # Shoes
     if any(w in text for w in ["shoe", "sneaker", "boot", "loafer", "sandal"]):
         return "shoes"
-    
-    # Outerwear
     if any(w in text for w in ["jacket", "coat", "blazer", "parka", "vest", "overshirt"]):
         return "outerwear"
     
@@ -248,7 +259,6 @@ def detect_category(product_type, product_name):
 
 
 def detect_fit(product_name, product_description, category):
-    """Fit doesn't matter for accessories."""
     if category in ("hats", "eyewear", "jewelry", "watches", "bags", "belts"):
         return "n/a"
     
@@ -311,7 +321,6 @@ def fetch_store(store):
                 variant = variants[0]
                 variant_title = variant.get("title", "")
                 
-                # For jewelry, prioritize metal detection
                 if category == "jewelry":
                     metal_result = detect_jewelry_metal(name, variant_title)
                     if metal_result:
@@ -327,12 +336,23 @@ def fetch_store(store):
                 fit = detect_fit(name, description, category)
                 tags = infer_tags(name, product_type, description)
                 gender = detect_gender(name, product_type, vendor)
+                material = detect_material(name, product_type, description)
+                pattern = detect_pattern(name, product_type, description)
+                color_category = detect_color_category(color_family)
                 
                 price = variant.get("price", "0")
                 try:
                     price_float = float(price)
                 except:
                     price_float = 0
+                
+                # Budget tier
+                if price_float < 100:
+                    budget_tier = "under-100"
+                elif price_float < 300:
+                    budget_tier = "100-300"
+                else:
+                    budget_tier = "300-plus"
                 
                 handle = product.get("handle", "")
                 base_url = store["url"].replace("/products.json", "")
@@ -345,9 +365,13 @@ def fetch_store(store):
                     "subcategory": product_type,
                     "color": color,
                     "color_family": color_family,
+                    "color_category": color_category,
                     "undertone_match": undertone,
                     "fit": fit,
                     "tags": tags,
+                    "material": material,
+                    "pattern": pattern,
+                    "budget_tier": budget_tier,
                     "gender": gender,
                     "price": round(price_float, 2),
                     "brand": store["name"],
@@ -388,7 +412,8 @@ if len(all_products) == 0:
 
 output_file = "real_catalog.csv"
 fieldnames = ["id", "name", "category", "subcategory", "color", "color_family",
-              "undertone_match", "fit", "tags", "gender", "price", "brand", "url", "image_url"]
+              "color_category", "undertone_match", "fit", "tags", "material", 
+              "pattern", "budget_tier", "gender", "price", "brand", "url", "image_url"]
 
 with open(output_file, "w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -404,12 +429,28 @@ for p in all_products:
 for cat, count in sorted(categories.items()):
     print(f"  {cat}: {count}")
 
-print("\n--- Breakdown by Brand ---")
-brands = {}
+print("\n--- Breakdown by Material ---")
+materials = {}
 for p in all_products:
-    brands[p["brand"]] = brands.get(p["brand"], 0) + 1
-for brand, count in sorted(brands.items()):
-    print(f"  {brand}: {count}")
+    for m in p.get("material", "").split(","):
+        if m:
+            materials[m] = materials.get(m, 0) + 1
+for m, count in sorted(materials.items(), key=lambda x: -x[1]):
+    print(f"  {m}: {count}")
+
+print("\n--- Breakdown by Pattern ---")
+patterns = {}
+for p in all_products:
+    patterns[p["pattern"]] = patterns.get(p["pattern"], 0) + 1
+for pat, count in sorted(patterns.items(), key=lambda x: -x[1]):
+    print(f"  {pat}: {count}")
+
+print("\n--- Breakdown by Budget Tier ---")
+tiers = {}
+for p in all_products:
+    tiers[p["budget_tier"]] = tiers.get(p["budget_tier"], 0) + 1
+for t, count in sorted(tiers.items()):
+    print(f"  {t}: {count}")
 
 print("\n--- Breakdown by Gender ---")
 genders = {}
