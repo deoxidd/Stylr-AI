@@ -196,6 +196,55 @@ st.markdown("""
         line-height: 1.7;
     }
     
+    .legal-page {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .legal-title {
+        font-family: 'Playfair Display', serif !important;
+        font-size: 2.5rem;
+        color: #f5f5f5;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+    
+    .legal-meta {
+        color: #777;
+        font-size: 0.9rem;
+        margin-bottom: 3rem;
+    }
+    
+    .legal-section {
+        margin: 2rem 0;
+    }
+    
+    .legal-section h3 {
+        font-size: 1.2rem;
+        color: #fff;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .legal-section p {
+        color: #bbb;
+        line-height: 1.7;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+    
+    .legal-section ul {
+        color: #bbb;
+        line-height: 1.7;
+        font-size: 0.95rem;
+        padding-left: 1.5rem;
+    }
+    
+    .legal-section ul li {
+        margin-bottom: 0.5rem;
+    }
+    
     .stButton > button {
         background-color: #1a1a1a;
         color: #e8e8e8;
@@ -311,6 +360,25 @@ st.markdown("""
         margin: 5rem 0 3rem 0;
     }
     
+    .footer {
+        border-top: 1px solid #1a1a1a;
+        padding: 2rem 0 1rem 0;
+        margin-top: 5rem;
+        text-align: center;
+    }
+    
+    .footer-links {
+        color: #666;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+    }
+    
+    .footer-copyright {
+        color: #555;
+        font-size: 0.8rem;
+        margin-top: 1rem;
+    }
+    
     .stFileUploader > div {
         background-color: #111;
         border: 1px dashed #2a2a2a;
@@ -359,7 +427,7 @@ def analyze_image(image_bytes, gender_pref, progress_callback=None):
         nparr = np.frombuffer(image_bytes, np.uint8)
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         if image is None:
-            return None, "Could not read the image file. Please try a different photo."
+            return None, "Could not read the image file."
     except Exception:
         return None, "Image loading failed. Try a different photo."
     
@@ -367,7 +435,7 @@ def analyze_image(image_bytes, gender_pref, progress_callback=None):
     height, width = image.shape[:2]
     
     if height < 400 or width < 200:
-        return None, "Photo is too small. Try a larger photo."
+        return None, "Photo is too small."
     
     if progress_callback:
         progress_callback("Detecting body landmarks...")
@@ -376,7 +444,7 @@ def analyze_image(image_bytes, gender_pref, progress_callback=None):
         with mp_pose.Pose(static_image_mode=True, model_complexity=1) as pose:
             results = pose.process(image_rgb)
     except Exception:
-        return None, "Body detection failed. Try a clearer photo."
+        return None, "Body detection failed."
     
     if not results.pose_landmarks:
         return None, "Could not detect a body. Stand facing camera, full body visible, good lighting."
@@ -636,10 +704,9 @@ if "selected_budget" not in st.session_state:
 
 
 # =========================================================================
-# HEADER (always visible)
+# HEADER
 # =========================================================================
 
-# Centered logo + wordmark
 col_a, col_b, col_c = st.columns([1, 2, 1])
 with col_b:
     sub_a, sub_b = st.columns([1, 3])
@@ -657,7 +724,6 @@ st.markdown('<p class="subtitle">Built around you . Built around your style</p>'
 
 if st.session_state.step == "landing":
     
-    # HERO
     st.markdown('<h1 class="hero-title">A stylist that<br>actually sees you.</h1>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">Stylr analyzes your body shape and skin tone, then recommends real clothing from real brands. Made for you. Not for everyone.</p>', unsafe_allow_html=True)
     
@@ -667,7 +733,6 @@ if st.session_state.step == "landing":
             st.session_state.step = "gender"
             st.rerun()
     
-    # HOW IT WORKS
     st.markdown('<div class="big-divider"></div>', unsafe_allow_html=True)
     st.markdown('<h2 class="section-title">How it works</h2>', unsafe_allow_html=True)
     st.markdown('<p class="section-subtitle">Three steps. Two minutes. Real recommendations.</p>', unsafe_allow_html=True)
@@ -700,7 +765,6 @@ if st.session_state.step == "landing":
         </div>
         """, unsafe_allow_html=True)
     
-    # WHY STYLR
     st.markdown('<div class="big-divider"></div>', unsafe_allow_html=True)
     st.markdown('<h2 class="section-title">Why Stylr</h2>', unsafe_allow_html=True)
     st.markdown('<p class="section-subtitle">What separates us from a generic shopping feed</p>', unsafe_allow_html=True)
@@ -710,14 +774,14 @@ if st.session_state.step == "landing":
         st.markdown("""
         <div class="feature-block">
             <div class="feature-title">Built around your body</div>
-            <div class="feature-desc">Every body shape has fits that work and fits that don't. We map your proportions to clothing geometry. Inverted Triangle. Rectangle. Hourglass. Pear. The science of dressing well, automated.</div>
+            <div class="feature-desc">Every body shape has fits that work and fits that don't. We map your proportions to clothing geometry. The science of dressing well, automated.</div>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-block">
             <div class="feature-title">Color theory, applied</div>
-            <div class="feature-desc">Your skin undertone determines which colors elevate you and which fight you. We extract it from your photo, then recommend a palette that flatters. Warm. Cool. Neutral. Each undertone gets different picks.</div>
+            <div class="feature-desc">Your skin undertone determines which colors elevate you. We extract it from your photo, then recommend a palette that flatters.</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -725,25 +789,24 @@ if st.session_state.step == "landing":
         st.markdown("""
         <div class="feature-block">
             <div class="feature-title">Real products. Real brands.</div>
-            <div class="feature-desc">No mockups. No fake catalog. Hundreds of pieces from established brands. Every recommendation is shoppable. Direct links to the source.</div>
+            <div class="feature-desc">No mockups. Hundreds of pieces from established brands. Every recommendation is shoppable. Direct links to the source.</div>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-block">
             <div class="feature-title">Granular control</div>
-            <div class="feature-desc">Want streetwear, but only in neutrals, only in cotton, under $100? Done. The more you tell us, the sharper the picks. Or pick nothing and let the engine surprise you.</div>
+            <div class="feature-desc">Want streetwear, in neutrals, only cotton, under \\$100? Done. The more you tell us, the sharper the picks. Or let the engine surprise you.</div>
         </div>
         """, unsafe_allow_html=True)
     
-    # FAQ
     st.markdown('<div class="big-divider"></div>', unsafe_allow_html=True)
     st.markdown('<h2 class="section-title">Questions</h2>', unsafe_allow_html=True)
     st.markdown('<p class="section-subtitle">The stuff people ask</p>', unsafe_allow_html=True)
     
     faq_items = [
-        ("Is my photo stored anywhere?", "No. Your photo is analyzed in real time and immediately discarded. We never save images. Only the derived measurements (body shape, undertone) are kept during your session."),
-        ("How accurate is the body shape detection?", "We use MediaPipe, the same computer vision tech behind Google's pose detection. With a clear full-body photo, accuracy is high. Bad lighting or partial photos reduce accuracy, in which case we ask you to retake."),
+        ("Is my photo stored anywhere?", "No. Your photo is analyzed in real time and immediately discarded. We never save images. Only derived measurements (body shape, undertone) are kept during your session."),
+        ("How accurate is the body shape detection?", "We use MediaPipe, the same computer vision behind Google's pose detection. With a clear full-body photo, accuracy is high. Bad lighting or partial photos reduce accuracy."),
         ("Why these specific brands?", "We started with brands known for quality construction and intentional design. Taylor Stitch, Aimé Leon Dore, Outerknown, Stussy, Miansai. More brands and major retailers are being added."),
         ("Do you make money on this?", "Eventually, through affiliate partnerships when you click through and buy. We do not change recommendations based on commission. The matching is based on what fits you."),
         ("Can I save my profile?", "Not yet. Each session starts fresh. Saved profiles and outfit history are on the roadmap."),
@@ -758,7 +821,6 @@ if st.session_state.step == "landing":
         </div>
         """, unsafe_allow_html=True)
     
-    # FINAL CTA
     st.markdown('<div class="big-divider"></div>', unsafe_allow_html=True)
     st.markdown('<h2 class="section-title" style="margin-bottom: 2rem;">Ready?</h2>', unsafe_allow_html=True)
     
@@ -769,6 +831,223 @@ if st.session_state.step == "landing":
             st.rerun()
     
     st.markdown('<br><br>', unsafe_allow_html=True)
+
+
+# =========================================================================
+# PRIVACY POLICY
+# =========================================================================
+
+elif st.session_state.step == "privacy":
+    st.markdown('<div class="legal-page">', unsafe_allow_html=True)
+    st.markdown('<h1 class="legal-title">Privacy Policy</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="legal-meta">Last updated: May 2026</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="legal-section">
+        <p>Stylr AI ("we", "us", "the service") takes your privacy seriously. This policy explains what data we collect, how we use it, and your rights.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>1. What we collect</h3>
+        <p>When you use Stylr AI, we temporarily process:</p>
+        <ul>
+            <li><b>Photos you upload</b>: processed in real-time to analyze body shape and skin tone, then immediately discarded. We do not store your photos.</li>
+            <li><b>Session preferences</b>: gender selection, style tags, color/material/pattern/budget preferences. Stored only during your active session.</li>
+            <li><b>Derived data</b>: body shape classification, skin undertone, proportion measurements. Used to generate recommendations during your session.</li>
+        </ul>
+    </div>
+    
+    <div class="legal-section">
+        <h3>2. What we do NOT collect</h3>
+        <ul>
+            <li>We do not collect names, emails, or accounts (no signup required).</li>
+            <li>We do not store your photos anywhere.</li>
+            <li>We do not track you across other websites.</li>
+            <li>We do not sell or share your data with marketers.</li>
+        </ul>
+    </div>
+    
+    <div class="legal-section">
+        <h3>3. Third parties</h3>
+        <p>The service is hosted on Streamlit Cloud, which has its own privacy policy. When you click product links, you leave Stylr AI and the destination retailer's privacy policy applies to your activity on their site.</p>
+        <p>We may earn affiliate commissions when you purchase through clicked links. This does not affect our recommendations, which are based purely on body shape, undertone, and your stated preferences.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>4. Cookies and tracking</h3>
+        <p>We use minimal session storage to remember your selections during a single visit. No persistent cookies, no analytics tracking beyond what Streamlit Cloud provides for service operation.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>5. Your rights</h3>
+        <p>Since we don't store personal data, there is no profile to delete. If you have any privacy concerns, contact: <b>dylandicksonpenney@icloud.com</b></p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>6. Children</h3>
+        <p>Stylr AI is not intended for users under 13. We do not knowingly collect data from minors. If you believe a minor has used the service, please contact us.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>7. Changes to this policy</h3>
+        <p>We may update this policy as the service evolves. The "Last updated" date at the top reflects the most recent revision.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>8. Jurisdiction</h3>
+        <p>This policy is governed by the laws of Newfoundland and Labrador, Canada.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>9. Contact</h3>
+        <p>Privacy questions, concerns, or requests: <b>dylandicksonpenney@icloud.com</b></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<br>', unsafe_allow_html=True)
+    if st.button("Back to home"):
+        st.session_state.step = "landing"
+        st.rerun()
+
+
+# =========================================================================
+# TERMS OF SERVICE
+# =========================================================================
+
+elif st.session_state.step == "terms":
+    st.markdown('<div class="legal-page">', unsafe_allow_html=True)
+    st.markdown('<h1 class="legal-title">Terms of Service</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="legal-meta">Last updated: May 2026</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="legal-section">
+        <p>By using Stylr AI ("the service"), you agree to these terms. If you don't agree, don't use the service.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>1. The service</h3>
+        <p>Stylr AI is a personal project building toward a fashion technology product. It analyzes photos to provide style recommendations. The service is provided as-is, without warranties of any kind, express or implied.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>2. User responsibilities</h3>
+        <p>By uploading photos, you confirm:</p>
+        <ul>
+            <li>You own the rights to the photo or have permission to upload it.</li>
+            <li>The photo does not contain explicit, illegal, or otherwise inappropriate content.</li>
+            <li>The photo does not depict a minor in a way that violates their privacy or dignity.</li>
+            <li>You are at least 13 years old.</li>
+            <li>You will not use the service to harm, harass, or violate the rights of others.</li>
+        </ul>
+    </div>
+    
+    <div class="legal-section">
+        <h3>3. Recommendations are suggestions, not advice</h3>
+        <p>Style recommendations are algorithmic suggestions based on your inputs. They are not professional styling advice, medical advice, or any kind of expert opinion. Final purchase decisions are yours alone.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>4. Affiliate disclosure</h3>
+        <p>When you click a product link, you may be redirected through an affiliate tracking link. We may earn commission on resulting purchases. This does not affect the price you pay. Recommendations are based on body shape, undertone, and your preferences, not affiliate revenue.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>5. Intellectual property</h3>
+        <p>The Stylr AI name, logo, code, and design are property of the creator. Product images and information shown in recommendations belong to the respective brands. Affiliate links go to original product pages.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>6. Limitation of liability</h3>
+        <p>To the maximum extent permitted by law, we are not liable for any damages arising from your use of the service, including but not limited to: incorrect recommendations, purchase decisions, missed connections, lost profits, or any consequential damages.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>7. Service availability</h3>
+        <p>The service may be temporarily unavailable for maintenance, updates, or technical issues. We make no guarantees about uptime or continued availability.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>8. Changes to these terms</h3>
+        <p>We may update these terms as the service evolves. Continued use after changes constitutes acceptance of the new terms.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>9. Termination</h3>
+        <p>We reserve the right to terminate access for any user who violates these terms or misuses the service.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>10. Governing law</h3>
+        <p>These terms are governed by the laws of Newfoundland and Labrador, Canada. Any disputes will be resolved in that jurisdiction.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>11. Contact</h3>
+        <p>Questions about these terms: <b>dylandicksonpenney@icloud.com</b></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<br>', unsafe_allow_html=True)
+    if st.button("Back to home"):
+        st.session_state.step = "landing"
+        st.rerun()
+
+
+# =========================================================================
+# ABOUT
+# =========================================================================
+
+elif st.session_state.step == "about":
+    st.markdown('<div class="legal-page">', unsafe_allow_html=True)
+    st.markdown('<h1 class="legal-title">About Stylr</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="legal-meta">A personal project building toward a fashion technology product</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="legal-section">
+        <h3>The idea</h3>
+        <p>Fashion advice is mostly noise. Generic recommendations. Influencer marketing. Algorithms that show you what everyone else is buying. None of it accounts for the specific way YOU are built.</p>
+        <p>Stylr is an experiment in solving that. Use computer vision to understand your body. Use color theory to understand your undertone. Match recommendations against real products from real brands. Make it personal in a way generic shopping never can be.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>The technology</h3>
+        <p>Stylr is built with Python and Streamlit. Body landmark detection uses MediaPipe (Google's open-source computer vision toolkit). Skin tone analysis uses OpenCV and LAB color space. Product data comes from public APIs of established Shopify-hosted brands.</p>
+        <p>The matching engine weights body shape compatibility, color undertone match, style preference, material, pattern, and budget into a final recommendation score per product.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>The creator</h3>
+        <p>Stylr was built by Dylan, a first-year Bachelor of Commerce student at Memorial University of Newfoundland. The project started in late April 2026 as a learning experiment exploring AI applied to fashion. It went from "I want to learn Python" to a deployed working app in about three weeks.</p>
+        <p>Current focus: refining the experience, expanding the catalog through affiliate partnerships, and preparing for a wider launch.</p>
+    </div>
+    
+    <div class="legal-section">
+        <h3>The roadmap</h3>
+        <ul>
+            <li>Affiliate network integration to unlock major retailers (Skimlinks, Awin)</li>
+            <li>Outfit builder combining tops, bottoms, and accessories into cohesive looks</li>
+            <li>Mobile-optimized interface</li>
+            <li>Saved profiles and recommendation history</li>
+            <li>Native iOS app</li>
+        </ul>
+    </div>
+    
+    <div class="legal-section">
+        <h3>Contact</h3>
+        <p>Feedback, partnership inquiries, or general questions: <b>dylandicksonpenney@icloud.com</b></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<br>', unsafe_allow_html=True)
+    if st.button("Back to home"):
+        st.session_state.step = "landing"
+        st.rerun()
 
 
 # =========================================================================
@@ -1153,3 +1432,27 @@ elif st.session_state.step == "results":
             st.session_state.selected_colors = []
             st.session_state.selected_budget = "any"
             st.rerun()
+
+
+# =========================================================================
+# FOOTER (always visible at bottom of every page)
+# =========================================================================
+
+st.markdown('<div class="footer">', unsafe_allow_html=True)
+
+f_col1, f_col2, f_col3, f_col4, f_col5 = st.columns([1, 1, 1, 1, 1])
+with f_col2:
+    if st.button("About", key="footer_about", use_container_width=True):
+        st.session_state.step = "about"
+        st.rerun()
+with f_col3:
+    if st.button("Privacy", key="footer_privacy", use_container_width=True):
+        st.session_state.step = "privacy"
+        st.rerun()
+with f_col4:
+    if st.button("Terms", key="footer_terms", use_container_width=True):
+        st.session_state.step = "terms"
+        st.rerun()
+
+st.markdown('<p class="footer-copyright">© 2026 Stylr AI . dylandicksonpenney@icloud.com</p>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
