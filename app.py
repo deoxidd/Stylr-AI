@@ -5,7 +5,6 @@ import numpy as np
 import math
 import csv
 import os
-import time
 
 st.set_page_config(
     page_title="Stylr AI",
@@ -22,7 +21,7 @@ st.markdown("""
         color: #e8e8e8;
     }
     
-    .stApp, .stApp *:not(.main-title) {
+    .stApp, .stApp *:not(.main-title):not(.hero-title):not(.section-title) {
         font-family: 'Inter', -apple-system, sans-serif;
     }
     
@@ -37,6 +36,51 @@ st.markdown("""
         line-height: 1;
         margin: 0;
         padding: 0;
+    }
+    
+    .hero-title {
+        font-family: 'Playfair Display', serif !important;
+        font-size: 5rem;
+        font-weight: 600;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        text-align: center;
+        margin: 2rem 0 1rem 0;
+    }
+    
+    .hero-subtitle {
+        font-family: 'Inter', sans-serif;
+        text-align: center;
+        color: #aaa;
+        font-size: 1.3rem;
+        font-weight: 300;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 0 auto 3rem auto;
+        padding: 0 2rem;
+        display: block;
+    }
+    
+    .section-title {
+        font-family: 'Playfair Display', serif !important;
+        font-size: 2.5rem;
+        font-weight: 500;
+        color: #f5f5f5;
+        text-align: center;
+        margin: 4rem 0 1rem 0;
+        letter-spacing: -0.02em;
+    }
+    
+    .section-subtitle {
+        text-align: center;
+        color: #888;
+        font-size: 1rem;
+        font-weight: 300;
+        letter-spacing: 0.05em;
+        margin-bottom: 3rem;
     }
     
     .subtitle {
@@ -82,6 +126,76 @@ st.markdown("""
         margin-right: 0.5rem;
     }
     
+    .step-card {
+        background: #111;
+        padding: 2rem;
+        border-radius: 4px;
+        border: 1px solid #1a1a1a;
+        text-align: center;
+        height: 100%;
+    }
+    
+    .step-card-number {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+        line-height: 1;
+    }
+    
+    .step-card-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 0.75rem;
+    }
+    
+    .step-card-desc {
+        font-size: 0.95rem;
+        color: #999;
+        line-height: 1.6;
+    }
+    
+    .feature-block {
+        padding: 2rem 1.5rem;
+        border-left: 2px solid #667eea;
+        margin: 1.5rem 0;
+        background: #0d0d0d;
+    }
+    
+    .feature-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 0.5rem;
+    }
+    
+    .feature-desc {
+        font-size: 0.95rem;
+        color: #aaa;
+        line-height: 1.6;
+    }
+    
+    .faq-item {
+        padding: 1.5rem 0;
+        border-bottom: 1px solid #1a1a1a;
+    }
+    
+    .faq-question {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 0.5rem;
+    }
+    
+    .faq-answer {
+        font-size: 0.95rem;
+        color: #999;
+        line-height: 1.7;
+    }
+    
     .stButton > button {
         background-color: #1a1a1a;
         color: #e8e8e8;
@@ -105,6 +219,8 @@ st.markdown("""
         background: linear-gradient(90deg, #667eea, #764ba2);
         border: none;
         font-weight: 600;
+        font-size: 1rem;
+        padding: 0.85rem 2rem;
     }
     
     .stButton > button[kind="primary"]:hover {
@@ -190,6 +306,11 @@ st.markdown("""
         margin: 2rem 0 1rem 0;
     }
     
+    .big-divider {
+        border-top: 1px solid #2a2a2a;
+        margin: 5rem 0 3rem 0;
+    }
+    
     .stFileUploader > div {
         background-color: #111;
         border: 1px dashed #2a2a2a;
@@ -201,6 +322,7 @@ st.markdown("""
     
     .block-container {
         padding-top: 2rem;
+        max-width: 1200px;
     }
     
     .stMarkdown p {
@@ -210,15 +332,23 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-col_left, col_logo, col_title, col_right = st.columns([1, 0.5, 2, 1])
-with col_logo:
-    st.image("logo.png", width=80)
-with col_title:
-    st.markdown('<h1 class="main-title" style="text-align: left; padding-top: 0.5rem; margin: 0;">Stylr AI</h1>', unsafe_allow_html=True)
-
-st.markdown('<p class="subtitle">Built around you . Built around your style</p>', unsafe_allow_html=True)
-
 mp_pose = mp.solutions.pose
+
+BUDGET_LABELS = {
+    "under-100": "Under \\$100",
+    "100-300": "\\$100 to \\$300",
+    "300-plus": "\\$300+"
+}
+
+ACCESSORY_CATEGORIES = {"hats", "eyewear", "jewelry", "watches", "bags", "belts"}
+
+fit_scores = {
+    "Inverted Triangle": {"slim": 90, "slim-straight": 95, "straight": 85, "tapered": 90, "relaxed": 75, "skinny": 30, "wide": 70, "chunky": 80, "athletic": 85},
+    "Triangle": {"slim": 70, "slim-straight": 75, "straight": 70, "tapered": 80, "relaxed": 60, "skinny": 50, "wide": 40, "chunky": 60, "athletic": 70},
+    "Rectangle": {"slim": 85, "slim-straight": 90, "straight": 85, "tapered": 85, "relaxed": 75, "skinny": 60, "wide": 70, "chunky": 75, "athletic": 85},
+    "Hourglass": {"slim": 95, "slim-straight": 90, "straight": 75, "tapered": 80, "relaxed": 60, "skinny": 80, "wide": 70, "chunky": 70, "athletic": 80},
+    "Pear": {"slim": 75, "slim-straight": 80, "straight": 75, "tapered": 70, "relaxed": 65, "skinny": 60, "wide": 50, "chunky": 60, "athletic": 70}
+}
 
 
 def analyze_image(image_bytes, gender_pref, progress_callback=None):
@@ -237,7 +367,7 @@ def analyze_image(image_bytes, gender_pref, progress_callback=None):
     height, width = image.shape[:2]
     
     if height < 400 or width < 200:
-        return None, "Photo is too small for accurate analysis. Try a larger photo."
+        return None, "Photo is too small. Try a larger photo."
     
     if progress_callback:
         progress_callback("Detecting body landmarks...")
@@ -249,7 +379,7 @@ def analyze_image(image_bytes, gender_pref, progress_callback=None):
         return None, "Body detection failed. Try a clearer photo."
     
     if not results.pose_landmarks:
-        return None, "Could not detect a body in this photo. Stand facing the camera, make sure your full body is visible, and use good lighting."
+        return None, "Could not detect a body. Stand facing camera, full body visible, good lighting."
     
     landmarks = results.pose_landmarks.landmark
     
@@ -259,10 +389,8 @@ def analyze_image(image_bytes, gender_pref, progress_callback=None):
         landmarks[27].visibility,
     ]
     
-    avg_visibility = sum(key_landmarks_visibility) / len(key_landmarks_visibility)
-    
-    if avg_visibility < 0.3:
-        return None, "Could not see your full body clearly. Take a full-body photo from head to feet."
+    if sum(key_landmarks_visibility) / len(key_landmarks_visibility) < 0.3:
+        return None, "Could not see your full body clearly."
     
     if progress_callback:
         progress_callback("Analyzing body shape...")
@@ -293,7 +421,7 @@ def analyze_image(image_bytes, gender_pref, progress_callback=None):
     leg_length = distance(left_hip, left_ankle)
     
     if shoulder_width == 0 or hip_width == 0 or leg_length == 0:
-        return None, "Could not measure body proportions. Try a different photo."
+        return None, "Could not measure body proportions."
     
     shoulder_to_hip_ratio = shoulder_width / hip_width
     torso_to_leg_ratio = torso_length / leg_length
@@ -385,23 +513,6 @@ def analyze_image(image_bytes, gender_pref, progress_callback=None):
     }, None
 
 
-fit_scores = {
-    "Inverted Triangle": {"slim": 90, "slim-straight": 95, "straight": 85, "tapered": 90, "relaxed": 75, "skinny": 30, "wide": 70, "chunky": 80, "athletic": 85},
-    "Triangle": {"slim": 70, "slim-straight": 75, "straight": 70, "tapered": 80, "relaxed": 60, "skinny": 50, "wide": 40, "chunky": 60, "athletic": 70},
-    "Rectangle": {"slim": 85, "slim-straight": 90, "straight": 85, "tapered": 85, "relaxed": 75, "skinny": 60, "wide": 70, "chunky": 75, "athletic": 85},
-    "Hourglass": {"slim": 95, "slim-straight": 90, "straight": 75, "tapered": 80, "relaxed": 60, "skinny": 80, "wide": 70, "chunky": 70, "athletic": 80},
-    "Pear": {"slim": 75, "slim-straight": 80, "straight": 75, "tapered": 70, "relaxed": 65, "skinny": 60, "wide": 50, "chunky": 60, "athletic": 70}
-}
-
-ACCESSORY_CATEGORIES = {"hats", "eyewear", "jewelry", "watches", "bags", "belts"}
-
-BUDGET_LABELS = {
-    "under-100": "Under \\$100",
-    "100-300": "\\$100 to \\$300",
-    "300-plus": "\\$300+"
-}
-
-
 def score_undertone(item_undertone, user_undertone):
     user_lower = user_undertone.lower()
     item_lower = item_undertone.lower()
@@ -423,8 +534,7 @@ def score_tags(item_tags_str, user_tags):
     overlap = item_tags.intersection(user_set)
     if not overlap:
         return 25
-    match_ratio = len(overlap) / len(user_set)
-    return round(40 + (match_ratio * 60))
+    return round(40 + ((len(overlap) / len(user_set)) * 60))
 
 
 def score_material(item_material_str, user_materials):
@@ -432,12 +542,9 @@ def score_material(item_material_str, user_materials):
         return 50
     if not item_material_str:
         return 40
-    item_mats = set(item_material_str.split(","))
-    user_set = set(user_materials)
-    overlap = item_mats.intersection(user_set)
-    if not overlap:
-        return 20
-    return 90
+    if set(item_material_str.split(",")).intersection(set(user_materials)):
+        return 90
+    return 20
 
 
 def score_pattern(item_pattern, user_patterns):
@@ -455,9 +562,7 @@ def score_color_category(item_color_cat, user_color_cats):
         return 50
     if not item_color_cat:
         return 40
-    item_cats = set(item_color_cat.split(","))
-    user_set = set(user_color_cats)
-    if item_cats.intersection(user_set):
+    if set(item_color_cat.split(",")).intersection(set(user_color_cats)):
         return 90
     return 30
 
@@ -486,22 +591,9 @@ def score_item(item, profile, user_tags, user_materials, user_patterns, user_col
     color_score = score_color_category(item.get("color_category", ""), user_colors)
     
     if category in ACCESSORY_CATEGORIES:
-        final_score = (
-            undertone_score * 0.30 +
-            tag_score * 0.30 +
-            pattern_score * 0.15 +
-            color_score * 0.15 +
-            material_score * 0.10
-        )
+        final_score = (undertone_score * 0.30 + tag_score * 0.30 + pattern_score * 0.15 + color_score * 0.15 + material_score * 0.10)
     else:
-        final_score = (
-            fit_score * 0.25 +
-            undertone_score * 0.20 +
-            tag_score * 0.20 +
-            material_score * 0.15 +
-            pattern_score * 0.10 +
-            color_score * 0.10
-        )
+        final_score = (fit_score * 0.25 + undertone_score * 0.20 + tag_score * 0.20 + material_score * 0.15 + pattern_score * 0.10 + color_score * 0.10)
     
     reasons = []
     if category not in ACCESSORY_CATEGORIES and fit_score >= 85:
@@ -521,10 +613,14 @@ def score_item(item, profile, user_tags, user_materials, user_patterns, user_col
     return round(final_score, 1), reasons
 
 
+# =========================================================================
+# STATE
+# =========================================================================
+
 if "profile" not in st.session_state:
     st.session_state.profile = None
 if "step" not in st.session_state:
-    st.session_state.step = "gender"
+    st.session_state.step = "landing"
 if "gender_pref" not in st.session_state:
     st.session_state.gender_pref = None
 if "selected_tags" not in st.session_state:
@@ -539,7 +635,147 @@ if "selected_budget" not in st.session_state:
     st.session_state.selected_budget = "any"
 
 
-if st.session_state.step == "gender":
+# =========================================================================
+# HEADER (always visible)
+# =========================================================================
+
+# Centered logo + wordmark
+col_a, col_b, col_c = st.columns([1, 2, 1])
+with col_b:
+    sub_a, sub_b = st.columns([1, 3])
+    with sub_a:
+        st.image("logo.png", width=80)
+    with sub_b:
+        st.markdown('<h1 class="main-title" style="text-align: left; padding-top: 0.5rem; margin: 0;">Stylr AI</h1>', unsafe_allow_html=True)
+
+st.markdown('<p class="subtitle">Built around you . Built around your style</p>', unsafe_allow_html=True)
+
+
+# =========================================================================
+# LANDING PAGE
+# =========================================================================
+
+if st.session_state.step == "landing":
+    
+    # HERO
+    st.markdown('<h1 class="hero-title">A stylist that<br>actually sees you.</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-subtitle">Stylr analyzes your body shape and skin tone, then recommends real clothing from real brands. Made for you. Not for everyone.</p>', unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if st.button("Get Started", type="primary", use_container_width=True, key="hero_cta"):
+            st.session_state.step = "gender"
+            st.rerun()
+    
+    # HOW IT WORKS
+    st.markdown('<div class="big-divider"></div>', unsafe_allow_html=True)
+    st.markdown('<h2 class="section-title">How it works</h2>', unsafe_allow_html=True)
+    st.markdown('<p class="section-subtitle">Three steps. Two minutes. Real recommendations.</p>', unsafe_allow_html=True)
+    
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown("""
+        <div class="step-card">
+            <div class="step-card-number">01</div>
+            <div class="step-card-title">Upload your photo</div>
+            <div class="step-card-desc">A single full-body photo. We analyze body shape and skin undertone using computer vision.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with c2:
+        st.markdown("""
+        <div class="step-card">
+            <div class="step-card-number">02</div>
+            <div class="step-card-title">Pick your style</div>
+            <div class="step-card-desc">Choose your aesthetic. Energy, fit, materials, colors, patterns, budget. As detailed as you want.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with c3:
+        st.markdown("""
+        <div class="step-card">
+            <div class="step-card-number">03</div>
+            <div class="step-card-title">Shop the match</div>
+            <div class="step-card-desc">Get curated picks across tops, bottoms, jewelry, accessories. Direct links to real products.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # WHY STYLR
+    st.markdown('<div class="big-divider"></div>', unsafe_allow_html=True)
+    st.markdown('<h2 class="section-title">Why Stylr</h2>', unsafe_allow_html=True)
+    st.markdown('<p class="section-subtitle">What separates us from a generic shopping feed</p>', unsafe_allow_html=True)
+    
+    fc1, fc2 = st.columns(2)
+    with fc1:
+        st.markdown("""
+        <div class="feature-block">
+            <div class="feature-title">Built around your body</div>
+            <div class="feature-desc">Every body shape has fits that work and fits that don't. We map your proportions to clothing geometry. Inverted Triangle. Rectangle. Hourglass. Pear. The science of dressing well, automated.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div class="feature-block">
+            <div class="feature-title">Color theory, applied</div>
+            <div class="feature-desc">Your skin undertone determines which colors elevate you and which fight you. We extract it from your photo, then recommend a palette that flatters. Warm. Cool. Neutral. Each undertone gets different picks.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with fc2:
+        st.markdown("""
+        <div class="feature-block">
+            <div class="feature-title">Real products. Real brands.</div>
+            <div class="feature-desc">No mockups. No fake catalog. Hundreds of pieces from established brands. Every recommendation is shoppable. Direct links to the source.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div class="feature-block">
+            <div class="feature-title">Granular control</div>
+            <div class="feature-desc">Want streetwear, but only in neutrals, only in cotton, under $100? Done. The more you tell us, the sharper the picks. Or pick nothing and let the engine surprise you.</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # FAQ
+    st.markdown('<div class="big-divider"></div>', unsafe_allow_html=True)
+    st.markdown('<h2 class="section-title">Questions</h2>', unsafe_allow_html=True)
+    st.markdown('<p class="section-subtitle">The stuff people ask</p>', unsafe_allow_html=True)
+    
+    faq_items = [
+        ("Is my photo stored anywhere?", "No. Your photo is analyzed in real time and immediately discarded. We never save images. Only the derived measurements (body shape, undertone) are kept during your session."),
+        ("How accurate is the body shape detection?", "We use MediaPipe, the same computer vision tech behind Google's pose detection. With a clear full-body photo, accuracy is high. Bad lighting or partial photos reduce accuracy, in which case we ask you to retake."),
+        ("Why these specific brands?", "We started with brands known for quality construction and intentional design. Taylor Stitch, Aimé Leon Dore, Outerknown, Stussy, Miansai. More brands and major retailers are being added."),
+        ("Do you make money on this?", "Eventually, through affiliate partnerships when you click through and buy. We do not change recommendations based on commission. The matching is based on what fits you."),
+        ("Can I save my profile?", "Not yet. Each session starts fresh. Saved profiles and outfit history are on the roadmap."),
+        ("Does this work for any body type or gender?", "Yes. We support men's, women's, and unisex modes with shape rules tailored to each. The matching algorithm is the same regardless.")
+    ]
+    
+    for question, answer in faq_items:
+        st.markdown(f"""
+        <div class="faq-item">
+            <div class="faq-question">{question}</div>
+            <div class="faq-answer">{answer}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # FINAL CTA
+    st.markdown('<div class="big-divider"></div>', unsafe_allow_html=True)
+    st.markdown('<h2 class="section-title" style="margin-bottom: 2rem;">Ready?</h2>', unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if st.button("Start now", type="primary", use_container_width=True, key="footer_cta"):
+            st.session_state.step = "gender"
+            st.rerun()
+    
+    st.markdown('<br><br>', unsafe_allow_html=True)
+
+
+# =========================================================================
+# STEP 1: GENDER
+# =========================================================================
+
+elif st.session_state.step == "gender":
     st.markdown('<h2 class="step-heading"><span class="step-number">01</span>How do you dress?</h2>', unsafe_allow_html=True)
     st.caption("This helps us recommend appropriate fits and brands")
     st.markdown("<br>", unsafe_allow_html=True)
@@ -563,7 +799,16 @@ if st.session_state.step == "gender":
             st.session_state.gender_pref = "all"
             st.session_state.step = "upload"
             st.rerun()
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("Back to home"):
+        st.session_state.step = "landing"
+        st.rerun()
 
+
+# =========================================================================
+# STEP 2: UPLOAD
+# =========================================================================
 
 elif st.session_state.step == "upload":
     pref_label = {"mens": "Men's", "womens": "Women's", "all": "Unisex"}[st.session_state.gender_pref]
@@ -608,7 +853,7 @@ elif st.session_state.step == "upload":
                 </div>
                 """, unsafe_allow_html=True)
             elif profile is None:
-                st.error("Something went wrong. Try a different photo.")
+                st.error("Something went wrong.")
             else:
                 st.session_state.profile = profile
                 st.success("Analysis complete")
@@ -635,6 +880,10 @@ elif st.session_state.step == "upload":
         st.session_state.step = "gender"
         st.rerun()
 
+
+# =========================================================================
+# STEP 3: TAGS
+# =========================================================================
 
 elif st.session_state.step == "tags":
     profile = st.session_state.profile
@@ -671,11 +920,7 @@ elif st.session_state.step == "tags":
     st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
     
     st.markdown('<p class="section-label">COLOR PALETTE</p>', unsafe_allow_html=True)
-    color_options = [
-        ("earth-tones", "Earth Tones"),
-        ("neutrals", "Neutrals"),
-        ("cool-tones", "Cool Tones")
-    ]
+    color_options = [("earth-tones", "Earth Tones"), ("neutrals", "Neutrals"), ("cool-tones", "Cool Tones")]
     cols = st.columns(3)
     for i, (key, label) in enumerate(color_options):
         with cols[i]:
@@ -690,14 +935,7 @@ elif st.session_state.step == "tags":
                 st.rerun()
     
     st.markdown('<p class="section-label">MATERIAL</p>', unsafe_allow_html=True)
-    material_options = [
-        ("cotton", "Cotton"),
-        ("linen", "Linen"),
-        ("wool", "Wool / Knit"),
-        ("denim", "Denim"),
-        ("leather", "Leather"),
-        ("technical", "Technical")
-    ]
+    material_options = [("cotton", "Cotton"), ("linen", "Linen"), ("wool", "Wool / Knit"), ("denim", "Denim"), ("leather", "Leather"), ("technical", "Technical")]
     
     for row_idx in range(2):
         cols = st.columns(3)
@@ -718,14 +956,7 @@ elif st.session_state.step == "tags":
                     st.rerun()
     
     st.markdown('<p class="section-label">PATTERN</p>', unsafe_allow_html=True)
-    pattern_options = [
-        ("solid", "Solid"),
-        ("stripes", "Stripes"),
-        ("plaid", "Plaid / Check"),
-        ("graphic", "Graphic"),
-        ("floral", "Floral"),
-        ("geometric", "Geometric")
-    ]
+    pattern_options = [("solid", "Solid"), ("stripes", "Stripes"), ("plaid", "Plaid / Check"), ("graphic", "Graphic"), ("floral", "Floral"), ("geometric", "Geometric")]
     
     for row_idx in range(2):
         cols = st.columns(3)
@@ -746,12 +977,7 @@ elif st.session_state.step == "tags":
                     st.rerun()
     
     st.markdown('<p class="section-label">BUDGET</p>', unsafe_allow_html=True)
-    budget_options = [
-        ("any", "Any Price"),
-        ("under-100", "Under \\$100"),
-        ("100-300", "\\$100 to \\$300"),
-        ("300-plus", "\\$300+")
-    ]
+    budget_options = [("any", "Any Price"), ("under-100", "Under \\$100"), ("100-300", "\\$100 to \\$300"), ("300-plus", "\\$300+")]
     
     cols = st.columns(4)
     for i, (key, label) in enumerate(budget_options):
@@ -792,6 +1018,10 @@ elif st.session_state.step == "tags":
                 st.rerun()
 
 
+# =========================================================================
+# STEP 4: RESULTS
+# =========================================================================
+
 elif st.session_state.step == "results":
     profile = st.session_state.profile
     user_tags = st.session_state.selected_tags
@@ -819,12 +1049,7 @@ elif st.session_state.step == "results":
     catalog_file = "smart_catalog.csv" if os.path.exists("smart_catalog.csv") else "real_catalog.csv"
     
     if not os.path.exists(catalog_file):
-        st.markdown("""
-        <div class="error-box">
-        <h4 style="color: #ff6b6b; margin-top: 0; border: none; padding: 0;">Catalog Unavailable</h4>
-        <p style="margin: 0; color: #ccc;">Product catalog is missing. Try again in a few minutes.</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="error-box"><h4 style="color: #ff6b6b; margin-top: 0; border: none; padding: 0;">Catalog Unavailable</h4></div>', unsafe_allow_html=True)
     else:
         try:
             catalog = []
@@ -832,12 +1057,10 @@ elif st.session_state.step == "results":
                 reader = csv.DictReader(f)
                 catalog = list(reader)
         except Exception:
-            st.error("Could not load catalog. Try refreshing the page.")
+            st.error("Could not load catalog.")
             catalog = []
         
-        if not catalog:
-            st.warning("No products available right now.")
-        else:
+        if catalog:
             if gender_pref == "mens":
                 catalog = [item for item in catalog if item.get("gender") in ("mens", "unisex")]
             elif gender_pref == "womens":
@@ -903,12 +1126,7 @@ elif st.session_state.step == "results":
                         st.markdown('</div>', unsafe_allow_html=True)
             
             if categories_shown == 0:
-                st.markdown("""
-                <div class="error-box">
-                <h4 style="color: #ff6b6b; margin-top: 0; border: none; padding: 0;">No Matches</h4>
-                <p style="margin: 0; color: #ccc;">Try different style tags or relax your budget filter for more options.</p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown('<div class="error-box"><h4 style="color: #ff6b6b; margin-top: 0; border: none; padding: 0;">No Matches</h4><p style="margin: 0; color: #ccc;">Try different tags or relax your filters.</p></div>', unsafe_allow_html=True)
     
     st.markdown("<br><hr style='border-color: #2a2a2a;'><br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
@@ -927,7 +1145,7 @@ elif st.session_state.step == "results":
             st.rerun()
     with col3:
         if st.button("Start over"):
-            st.session_state.step = "gender"
+            st.session_state.step = "landing"
             st.session_state.profile = None
             st.session_state.selected_tags = []
             st.session_state.selected_materials = []
